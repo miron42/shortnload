@@ -14,8 +14,9 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB')
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DB', 'sqlite:///db.sqlite3')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'S3CR3T-K3Y-F0R-Y4CUT')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -23,9 +24,10 @@ def create_app():
     migrate.init_app(app, db)
 
     from . import views, api_views
-
     app.register_blueprint(views.bp)
-    csrf.exempt(api_views.bp)
     app.register_blueprint(api_views.bp)
 
     return app
+
+
+app = create_app()
