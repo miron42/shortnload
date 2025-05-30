@@ -35,8 +35,11 @@ def create_short_link():
 
         if custom_id.lower() == 'files' or existing:
             return jsonify(
-                message='Предложенный вариант' /
-                'короткой ссылки уже существует.'), 400
+                message=(
+                    'Предложенный вариант короткой ссылки уже '
+                    'существует.'
+                )
+            ), 400
         short = custom_id
     else:
         short = get_unique_short_id()
