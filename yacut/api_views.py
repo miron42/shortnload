@@ -29,11 +29,14 @@ def create_short_link():
     if custom_id:
 
         if not re.fullmatch(r'[a-zA-Z0-9]+', custom_id):
-            return jsonify(message='Указано недопустимое имя для короткой ссылки'), 400
+            return jsonify(
+                message='Указано недопустимое имя для короткой ссылки'), 400
         existing = URLMap.query.filter_by(short=custom_id).first()
 
         if custom_id.lower() == 'files' or existing:
-            return jsonify(message='Предложенный вариант короткой ссылки уже существует.'), 400
+            return jsonify(
+                message='Предложенный вариант' /
+                'короткой ссылки уже существует.'), 400
         short = custom_id
     else:
         short = get_unique_short_id()

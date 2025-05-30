@@ -9,6 +9,7 @@ db = SQLAlchemy()
 csrf = CSRFProtect()
 migrate = Migrate()
 
+
 def create_app():
     load_dotenv()
 

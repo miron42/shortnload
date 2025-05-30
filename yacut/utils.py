@@ -2,7 +2,6 @@ import random
 import string
 
 from yacut.models import URLMap
-from yacut import db
 
 CHARS = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
 

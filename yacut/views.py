@@ -15,8 +15,11 @@ def index_view():
         custom = form.custom_id.data
 
         if custom:
-            if custom == 'files' or URLMap.query.filter_by(short=custom).first():
-                flash('Предложенный вариант короткой ссылки уже существует.', 'error')
+            if custom == 'files' or URLMap.query.filter_by(
+                    short=custom).first():
+                flash(
+                    'Предложенный вариант короткой ссылки уже существует.',
+                    'error')
                 return render_template('index.html', form=form)
             short = custom
         else:
