@@ -9,13 +9,12 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 
 @bp.route('/id/', methods=['POST'])
 def create_short_link():
-    try:
-        data = request.get_json(force=True)
-
-    except Exception:
+    if not request.is_json:
         return jsonify(message='Отсутствует тело запроса'), 400
 
-    if not data:
+    try:
+        data = request.get_json(force=True)
+    except Exception:
         return jsonify(message='Отсутствует тело запроса'), 400
 
     url = data.get('url')
@@ -27,17 +26,25 @@ def create_short_link():
     existing_by_url = URLMap.query.filter_by(original=url).first()
     if not custom_id and existing_by_url:
         return jsonify(
-            short_link=url_for('main.redirect_view',
-                               short=existing_by_url.short, _external=True),
+            short_link=url_for(
+                'main.redirect_view', short=existing_by_url.short,
+                _external=True
+            ),
             message='Короткая ссылка для переданного URL уже существует.'
         ), 409
 
     if custom_id:
-        if len(custom_id) > 16 or not re.fullmatch(r'[a-zA-Z0-9]+', custom_id):
-            return jsonify(message='Указано недопустимое имя для короткой ссылки'), 400
+        if (len(custom_id) > 16 or
+                not re.fullmatch(r'[a-zA-Z0-9]+', custom_id)):
+            return jsonify(
+                message='Указано недопустимое имя для короткой ссылки'
+            ), 400
 
-        if custom_id.lower() == 'files' or URLMap.query.filter_by(short=custom_id).first():
-            return jsonify(message='Предложенный вариант короткой ссылки уже существует.'), 400
+        if (custom_id.lower() == 'files' or
+                URLMap.query.filter_by(short=custom_id).first()):
+            return jsonify(
+                message='Предложенный вариант короткой ссылки уже существует.'
+            ), 400
 
         short = custom_id
     else:
