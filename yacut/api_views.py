@@ -26,20 +26,36 @@ def create_short_link():
     if not url:
         return jsonify(message='"url" является обязательным полем!'), 400
 
+    # если без custom_id и URL уже есть
+    existing_by_url = URLMap.query.filter_by(original=url).first()
+    if not custom_id and existing_by_url:
+        return (
+            jsonify(
+                short_link=url_for('main.redirect_view',
+                                   short=existing_by_url.short,
+                                   _external=True),
+                message='Короткая ссылка для переданного URL уже существует.'
+            ),
+            409
+        )
+
     if custom_id:
+        # длиннее 16 → та же ошибка, что и для недопустимого имени
+        if len(custom_id) > 16:
+            return jsonify(
+                message='Указано недопустимое имя для короткой ссылки'), 400
 
         if not re.fullmatch(r'[a-zA-Z0-9]+', custom_id):
             return jsonify(
                 message='Указано недопустимое имя для короткой ссылки'), 400
-        existing = URLMap.query.filter_by(short=custom_id).first()
 
-        if custom_id.lower() == 'files' or existing:
-            return jsonify(
-                message=(
-                    'Предложенный вариант короткой ссылки уже '
-                    'существует.'
-                )
-            ), 400
+        existing_by_short = URLMap.query.filter_by(short=custom_id).first()
+        if custom_id.lower() == 'files' or existing_by_short:
+            return jsonify(message=(
+                'Предложенный вариант короткой ссылки '
+                'уже существует.'
+            )), 400
+
         short = custom_id
     else:
         short = get_unique_short_id()
@@ -52,8 +68,9 @@ def create_short_link():
     return jsonify(url=url, short_link=short_link), 201
 
 
-@bp.route('/id/<string:short_id>', methods=['GET'])
+@bp.route('/id/<string:short_id>/', methods=['GET'])
 def get_original_url(short_id):
+    print('DEBUG: DB contains →', [url.short for url in URLMap.query.all()])
     url_map = URLMap.query.filter_by(short=short_id).first()
     if not url_map:
         return jsonify(message='Указанный id не найден'), 404

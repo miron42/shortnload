@@ -15,13 +15,14 @@
     <header class="pb-5">
       <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
         <div class="container">
-          <div class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="nav nav-pills">
               <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('main.index_view') }}">Главная</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.files_view') }}">Загрузка файлов</a>
               </li>
             </ul>
           </div>
@@ -45,22 +46,25 @@
                     {{ form.original_link(class_='form-control form-control-lg py-2 mb-3', placeholder='Длинная ссылка') }}
                     {% for error in form.original_link.errors %}
                       <p>
-                        <span style="color:red">{{ error }}</span>
+                        <span class="text-danger">{{ error }}</span>
                       </p>
                     {% endfor %}
                   </div>
                   <div>
-                    {{ form.custom_id(class_='form-control form-control-lg py-2 mb-3', placeholder='Ваш вариант короткой ссылки') }}
+                    {{ form.custom_id(class_='form-control form-control-lg py-2 mb-3', placeholder='Ваш вариант короткой ссылки', maxlength='16') }}
                     {% for error in form.custom_id.errors %}
                       <p>
-                        <span style="color:red">{{ error }}</span>
+                        <span class="text-danger">{{ error }}</span>
                       </p>
                     {% endfor %}
                   </div>
-
                   <input type="submit" class="btn btn-primary" value="Создать" />
                 </div>
               </form>
+
+              {% if error %}
+                <div class="alert alert-danger mt-3">{{ error }}</div>
+              {% endif %}
             </div>
             <div class="col-sm"></div>
           </div>
