@@ -1,20 +1,28 @@
 from flask import Blueprint, jsonify, request, url_for
+import re
+
 from yacut.models import URLMap
 from yacut.utils import get_unique_short_id
 from yacut import db
-import re
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
 
 @bp.route('/id/', methods=['POST'])
 def create_short_link():
-    if not request.is_json:
-        return jsonify(message='Отсутствует тело запроса'), 400
+    """Создаёт короткую ссылку по переданному URL и custom_id.
 
+    Возвращает:
+        - 201: при успешном создании ссылки;
+        - 400: если данные отсутствуют или некорректны;
+        - 409: если для URL уже существует короткая ссылка.
+    """
     try:
         data = request.get_json(force=True)
     except Exception:
+        return jsonify(message='Отсутствует тело запроса'), 400
+
+    if not data:
         return jsonify(message='Отсутствует тело запроса'), 400
 
     url = data.get('url')
@@ -60,7 +68,12 @@ def create_short_link():
 
 @bp.route('/id/<string:short_id>/', methods=['GET'])
 def get_original_url(short_id):
-    print('DEBUG: DB contains →', [url.short for url in URLMap.query.all()])
+    """Получает оригинальный URL по его короткой версии.
+
+    Возвращает:
+        - 200: если найден оригинальный URL;
+        - 404: если short_id не найден.
+    """
     url_map = URLMap.query.filter_by(short=short_id).first()
     if not url_map:
         return jsonify(message='Указанный id не найден'), 404

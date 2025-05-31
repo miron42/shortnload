@@ -1,1 +1,16 @@
-Страница не найдена
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Страница не найдена — 404</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />
+  </head>
+  <body>
+    <div class="container text-center mt-5">
+      <h1 class="display-3">404</h1>
+      <p class="lead">Ой! Страница не найдена.</p>
+      <p>Возможно, вы ввели неправильный адрес или страница была удалена.</p>
+      <a href="{{ url_for('main.index_view') }}" class="btn btn-primary mt-3">На главную</a>
+    </div>
+  </body>
+</html>

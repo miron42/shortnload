@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Сервис YaCut — укоротитель ссылок." />
     <link rel="icon" href="{{ url_for('static', filename='img/fav/fav.ico') }}" type="image" />
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/fav/apple-touch-icon.png') }}" />
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/fav/favicon-32x32.png') }}" />
@@ -35,52 +36,43 @@
         <h1 class="text-center"><span style="color:red">Ya</span>Cut</h1>
         <p class="text-center my-4">Создайте короткую ссылку автоматически или предложите свой вариант</p>
 
-        <div class="container">
-          <div class="row my-3">
-            <div class="col-sm"></div>
-            <div class="col-sm">
-              <form method="POST">
-                {{ form.hidden_tag() }}
-                <div>
-                  <div>
-                    {{ form.original_link(class_='form-control form-control-lg py-2 mb-3', placeholder='Длинная ссылка') }}
-                    {% for error in form.original_link.errors %}
-                      <p>
-                        <span class="text-danger">{{ error }}</span>
-                      </p>
-                    {% endfor %}
-                  </div>
-                  <div>
-                    {{ form.custom_id(class_='form-control form-control-lg py-2 mb-3', placeholder='Ваш вариант короткой ссылки', maxlength='16') }}
-                    {% for error in form.custom_id.errors %}
-                      <p>
-                        <span class="text-danger">{{ error }}</span>
-                      </p>
-                    {% endfor %}
-                  </div>
-                  <input type="submit" class="btn btn-primary" value="Создать" />
-                </div>
-              </form>
+        <div class="row justify-content-center my-3">
+          <div class="col-md-6">
+            <form method="POST">
+              {{ form.hidden_tag() }}
+              <div>
+                {{ form.original_link(class_='form-control form-control-lg py-2 mb-3', placeholder='Длинная ссылка', required=True) }}
+                {% for error in form.original_link.errors %}
+                  <p>
+                    <span class="text-danger">{{ error }}</span>
+                  </p>
+                {% endfor %}
+              </div>
+              <div>
+                {{ form.custom_id(class_='form-control form-control-lg py-2 mb-3', placeholder='Ваш вариант короткой ссылки', maxlength='16') }}
+                {% for error in form.custom_id.errors %}
+                  <p>
+                    <span class="text-danger">{{ error }}</span>
+                  </p>
+                {% endfor %}
+              </div>
+              <input type="submit" class="btn btn-primary" value="Создать" />
+            </form>
 
-              {% if error %}
-                <div class="alert alert-danger mt-3">{{ error }}</div>
-              {% endif %}
-            </div>
-            <div class="col-sm"></div>
+            {% if error %}
+              <div class="alert alert-danger mt-3">{{ error }}</div>
+            {% endif %}
           </div>
         </div>
 
         {% if short_url %}
-          <div class="container">
-            <div class="row">
-              <div class="col-sm"></div>
-              <div class="col-sm text-center">
-                <h5>Ваша короткая ссылка:</h5>
-                <p>
-                  <a href="{{ short_url }}">{{ short_url }}</a>
-                </p>
-              </div>
-              <div class="col-sm"></div>
+          <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+              <h5>Ваша короткая ссылка:</h5>
+              <p>
+                <a href="{{ short_url }}" id="short-link">{{ short_url }}</a>
+              </p>
+              <button class="btn btn-outline-secondary btn-sm" onclick="navigator.clipboard.writeText('{{ short_url }}')">Копировать</button>
             </div>
           </div>
         {% endif %}
@@ -91,7 +83,7 @@
       <p>Укоротитель ссылок YaCut</p>
     </footer>
 
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" crossorigin="anonymous"></script>
   </body>
 </html>

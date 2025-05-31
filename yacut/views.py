@@ -1,22 +1,28 @@
 import os
 import urllib
-from flask import Blueprint, render_template, redirect, url_for, request
 import aiohttp
+
+from flask import (
+    Blueprint, render_template, redirect,
+    url_for, request
+)
+
 from yacut.forms import ShortenForm
 from yacut.models import URLMap
 from yacut import db
 from yacut.utils import get_unique_short_id
+
+bp = Blueprint('main', __name__)
 
 API_HOST = 'https://cloud-api.yandex.net/'
 API_VERSION = 'v1'
 UPLOAD_URL = f'{API_HOST}{API_VERSION}/disk/resources/upload'
 DOWNLOAD_URL = f'{API_HOST}{API_VERSION}/disk/resources/download'
 
-bp = Blueprint('main', __name__)
-
 
 @bp.route('/', methods=['GET', 'POST'])
 def index_view():
+    """Главная страница. Обрабатывает форму сокращения ссылки."""
     form = ShortenForm()
     error = None
     short_url = None
@@ -45,16 +51,19 @@ def index_view():
 
 @bp.route('/<string:short>')
 def redirect_view(short):
+    """Перенаправляет по короткой ссылке на оригинальный URL."""
     url_map = URLMap.query.filter_by(short=short).first_or_404()
     return redirect(url_map.original)
 
 
 def get_yd_headers():
+    """Возвращает заголовки авторизации для Яндекс.Диска."""
     token = os.environ.get('DISK_TOKEN')
     return {'Authorization': f'OAuth {token}'}
 
 
 def get_yd_urls():
+    """Генерирует ссылки для загрузки и скачивания с Яндекс.Диска."""
     host = os.environ.get(
         'YANDEX_API_HOST', 'https://cloud-api.yandex.net').rstrip('/')
     version = 'v1'
@@ -65,12 +74,12 @@ def get_yd_urls():
 
 @bp.route('/files', methods=['GET', 'POST'])
 async def files_view():
+    """Обрабатывает загрузку файлов на Яндекс.Диск и выдаёт короткие ссылки."""
 
     if request.method == 'GET':
         return render_template('files.html')
 
     UPLOAD_URL, DOWNLOAD_URL = get_yd_urls()
-
     uploaded_files = request.files.getlist('files')
     results = []
 
@@ -78,7 +87,6 @@ async def files_view():
     async with aiohttp.ClientSession(headers=yd_headers) as session:
         for f in uploaded_files:
             filename = f.filename
-
             params_upload = {
                 'path': f'app:/{filename}',
                 'overwrite': 'false',
@@ -92,8 +100,7 @@ async def files_view():
             put_resp = await session.put(upload_href, data=file_bytes)
             put_resp.raise_for_status()
 
-            raw_location = put_resp.headers.get(
-                'Location', '')  # например "/disk/app/имя.png"
+            raw_location = put_resp.headers.get('Location', '')
             file_on_disk = urllib.parse.unquote(raw_location).lstrip('/disk')
 
             params_download = {'path': file_on_disk}
