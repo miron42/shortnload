@@ -1,55 +1,52 @@
 import os
 import urllib
+
 import aiohttp
+from flask import redirect, render_template, request
 
-from flask import (
-    Blueprint, render_template, redirect,
-    url_for, request
-)
-
+from yacut import app
+from yacut.constants import FILES_ROUTE
 from yacut.forms import ShortenForm
 from yacut.models import URLMap
-from yacut import db
-from yacut.utils import get_unique_short_id
-
-bp = Blueprint('main', __name__)
-
-API_HOST = 'https://cloud-api.yandex.net/'
-API_VERSION = 'v1'
-UPLOAD_URL = f'{API_HOST}{API_VERSION}/disk/resources/upload'
-DOWNLOAD_URL = f'{API_HOST}{API_VERSION}/disk/resources/download'
 
 
-@bp.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index_view():
     """Главная страница. Обрабатывает форму сокращения ссылки."""
     form = ShortenForm()
-    error = None
-    short_url = None
 
-    if form.validate_on_submit():
-        original_link = form.original_link.data
-        custom_id = form.custom_id.data or get_unique_short_id()
+    if not form.validate_on_submit():
+        return render_template(
+            'index.html',
+            form=form,
+            error=None,
+            short_url=None
+        )
 
-        existing = URLMap.query.filter_by(short=custom_id).first()
-        if custom_id.lower() == 'files' or existing:
-            error = 'Предложенный вариант короткой ссылки уже существует.'
-        else:
-            new_entry = URLMap(original=original_link, short=custom_id)
-            db.session.add(new_entry)
-            db.session.commit()
-            short_url = url_for('main.redirect_view',
-                                short=custom_id, _external=True)
+    original_link = form.original_link.data
+    custom_id = form.custom_id.data or URLMap.generate_unique_short_id()
 
+    if custom_id.lower() == FILES_ROUTE.strip('/') or \
+            URLMap.get_by_short(custom_id):
+        error = 'Предложенный вариант короткой ссылки уже существует.'
+        return render_template(
+            'index.html',
+            form=form,
+            error=error,
+            short_url=None
+        )
+
+    new_entry = URLMap.create(original=original_link, short=custom_id)
+    short_url = new_entry.to_dict()['short_link']
     return render_template(
         'index.html',
         form=form,
-        error=error,
+        error=None,
         short_url=short_url
-    ), 200
+    )
 
 
-@bp.route('/<string:short>')
+@app.route('/<string:short>')
 def redirect_view(short):
     """Перенаправляет по короткой ссылке на оригинальный URL."""
     url_map = URLMap.query.filter_by(short=short).first_or_404()
@@ -65,21 +62,21 @@ def get_yd_headers():
 def get_yd_urls():
     """Генерирует ссылки для загрузки и скачивания с Яндекс.Диска."""
     host = os.environ.get(
-        'YANDEX_API_HOST', 'https://cloud-api.yandex.net').rstrip('/')
+        'YANDEX_API_HOST', 'https://cloud-api.yandex.net'
+    ).rstrip('/')
     version = 'v1'
     upload_url = f'{host}/{version}/disk/resources/upload'
     download_url = f'{host}/{version}/disk/resources/download'
     return upload_url, download_url
 
 
-@bp.route('/files', methods=['GET', 'POST'])
+@app.route(FILES_ROUTE, methods=['GET', 'POST'])
 async def files_view():
     """Обрабатывает загрузку файлов на Яндекс.Диск и выдаёт короткие ссылки."""
-
     if request.method == 'GET':
         return render_template('files.html')
 
-    UPLOAD_URL, DOWNLOAD_URL = get_yd_urls()
+    upload_url, download_url = get_yd_urls()
     uploaded_files = request.files.getlist('files')
     results = []
 
@@ -91,7 +88,7 @@ async def files_view():
                 'path': f'app:/{filename}',
                 'overwrite': 'false',
             }
-            resp1 = await session.get(UPLOAD_URL, params=params_upload)
+            resp1 = await session.get(upload_url, params=params_upload)
             resp1.raise_for_status()
             data1 = await resp1.json()
             upload_href = data1.get('href')
@@ -104,22 +101,14 @@ async def files_view():
             file_on_disk = urllib.parse.unquote(raw_location).lstrip('/disk')
 
             params_download = {'path': file_on_disk}
-            resp2 = await session.get(DOWNLOAD_URL, params=params_download)
+            resp2 = await session.get(download_url, params=params_download)
             resp2.raise_for_status()
             data2 = await resp2.json()
             direct_href = data2.get('href')
 
-            short = get_unique_short_id()
-            while URLMap.query.filter_by(short=short).first():
-                short = get_unique_short_id()
-
-            new_entry = URLMap(original=direct_href, short=short)
-            db.session.add(new_entry)
-            db.session.commit()
-
-            short_link = url_for('main.redirect_view',
-                                 short=short, _external=True)
-
+            short = URLMap.generate_unique_short_id()
+            new_entry = URLMap.create(original=direct_href, short=short)
+            short_link = new_entry.to_dict()['short_link']
             results.append((filename, short_link))
 
     return render_template('files.html', files=results)
