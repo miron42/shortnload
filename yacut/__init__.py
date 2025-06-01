@@ -1,4 +1,3 @@
-from . import views, api_views, error_handlers
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -23,3 +22,4 @@ csrf = CSRFProtect(app)
 migrate = Migrate(app, db)
 
 # Импорт и регистрация представлений и обработчиков ошибок
+from . import views, api_views, error_handlers
