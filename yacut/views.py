@@ -2,12 +2,13 @@ import os
 import urllib
 
 import aiohttp
-from flask import redirect, render_template, request
+from flask import redirect, render_template, request, flash
 
 from yacut import app
 from yacut.constants import FILES_ROUTE
 from yacut.forms import ShortenForm
 from yacut.models import URLMap
+from yacut.error_handlers import InvalidAPIUsage
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -16,34 +17,24 @@ def index_view():
     form = ShortenForm()
 
     if not form.validate_on_submit():
-        return render_template(
-            'index.html',
-            form=form,
-            error=None,
-            short_url=None
-        )
+        return render_template('index.html', form=form, short_url=None)
 
     original_link = form.original_link.data
     custom_id = form.custom_id.data or URLMap.generate_unique_short_id()
 
-    if custom_id.lower() == FILES_ROUTE.strip('/') or \
-            URLMap.get_by_short(custom_id):
-        error = 'Предложенный вариант короткой ссылки уже существует.'
-        return render_template(
-            'index.html',
-            form=form,
-            error=error,
-            short_url=None
-        )
+    if (URLMap.get_by_short(custom_id) or
+            custom_id.lower() == FILES_ROUTE.strip('/')):
+        flash('Предложенный вариант короткой ссылки уже существует.', 'danger')
+        return render_template('index.html', form=form, short_url=None)
 
-    new_entry = URLMap.create(original=original_link, short=custom_id)
+    try:
+        new_entry = URLMap.create(original=original_link, short=custom_id)
+    except InvalidAPIUsage as error:
+        flash(str(error), 'danger')
+        return render_template('index.html', form=form, short_url=None)
+
     short_url = new_entry.to_dict()['short_link']
-    return render_template(
-        'index.html',
-        form=form,
-        error=None,
-        short_url=short_url
-    )
+    return render_template('index.html', form=form, short_url=short_url)
 
 
 @app.route('/<string:short>')
@@ -62,8 +53,7 @@ def get_yd_headers():
 def get_yd_urls():
     """Генерирует ссылки для загрузки и скачивания с Яндекс.Диска."""
     host = os.environ.get(
-        'YANDEX_API_HOST', 'https://cloud-api.yandex.net'
-    ).rstrip('/')
+        'YANDEX_API_HOST', 'https://cloud-api.yandex.net').rstrip('/')
     version = 'v1'
     upload_url = f'{host}/{version}/disk/resources/upload'
     download_url = f'{host}/{version}/disk/resources/download'
@@ -107,8 +97,12 @@ async def files_view():
             direct_href = data2.get('href')
 
             short = URLMap.generate_unique_short_id()
-            new_entry = URLMap.create(original=direct_href, short=short)
-            short_link = new_entry.to_dict()['short_link']
-            results.append((filename, short_link))
+            try:
+                new_entry = URLMap.create(original=direct_href, short=short)
+                short_link = new_entry.to_dict()['short_link']
+                results.append((filename, short_link))
+            except InvalidAPIUsage as e:
+                flash(str(e), 'danger')
+                continue
 
     return render_template('files.html', files=results)

@@ -9,6 +9,7 @@ from yacut import db
 from yacut.constants import (
     CHARS,
     DEFAULT_SHORT_ID_LENGTH,
+    FILES_ROUTE,
     MAX_CUSTOM_ID_LENGTH,
     MAX_URL_LENGTH
 )
@@ -45,17 +46,21 @@ class URLMap(db.Model):
 
     @staticmethod
     def create(original: str, short: str) -> "URLMap":
-        """Создаёт и сохраняет URLMap. При ошибке выбрасывает исключение."""
-        new_link = URLMap(original=original, short=short)
-        db.session.add(new_link)
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
+        """Создаёт и сохраняет URLMap. Проверяет занятость и запрещённые имена."""
+        if short.lower() == FILES_ROUTE.strip('/'):
             raise InvalidAPIUsage(
                 'Предложенный вариант короткой ссылки уже существует.',
                 HTTPStatus.BAD_REQUEST
             )
+        if URLMap.get_by_short(short):
+            raise InvalidAPIUsage(
+                'Предложенный вариант короткой ссылки уже существует.',
+                HTTPStatus.BAD_REQUEST
+            )
+
+        new_link = URLMap(original=original, short=short)
+        db.session.add(new_link)
+        db.session.commit()
         return new_link
 
     @staticmethod
