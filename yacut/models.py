@@ -3,7 +3,6 @@ from datetime import datetime
 from http import HTTPStatus
 
 from flask import url_for
-from sqlalchemy.exc import IntegrityError
 
 from yacut import db
 from yacut.constants import (
