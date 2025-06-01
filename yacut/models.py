@@ -46,7 +46,7 @@ class URLMap(db.Model):
 
     @staticmethod
     def create(original: str, short: str) -> "URLMap":
-        """Создаёт и сохраняет URLMap. Проверяет занятость и запрещённые имена."""
+        """Создаёт и сохраняет URLMap."""
         if short.lower() == FILES_ROUTE.strip('/'):
             raise InvalidAPIUsage(
                 'Предложенный вариант короткой ссылки уже существует.',
