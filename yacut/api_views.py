@@ -29,7 +29,7 @@ def create_short_link():
         raise InvalidAPIUsage(
             '"url" является обязательным полем!', HTTPStatus.BAD_REQUEST)
 
-    if custom_id and (
+    if custom_id and len(custom_id) > 0 and (
         not MIN_CUSTOM_ID_LENGTH <= len(custom_id) <= MAX_CUSTOM_ID_LENGTH
         or custom_id.lower() in RESERVED_NAMES
         or not re.fullmatch(CUSTOM_ID_PATTERN, custom_id)
@@ -38,8 +38,7 @@ def create_short_link():
             'Указано недопустимое имя для короткой ссылки'
         )
 
-    short = custom_id or URLMap.generate_unique_short_id()
-    new_link = URLMap.create(original=url, short=short)
+    new_link = URLMap.create(original=url, short=custom_id)
     return jsonify(new_link.to_dict()), HTTPStatus.CREATED
 
 

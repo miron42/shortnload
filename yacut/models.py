@@ -44,18 +44,21 @@ class URLMap(db.Model):
         return URLMap.query.filter_by(short=short_id).first()
 
     @staticmethod
-    def create(original: str, short: str) -> "URLMap":
-        """Создаёт и сохраняет URLMap."""
-        if short.lower() == FILES_ROUTE.strip('/'):
-            raise InvalidAPIUsage(
-                'Предложенный вариант короткой ссылки уже существует.',
-                HTTPStatus.BAD_REQUEST
-            )
-        if URLMap.get_by_short(short):
-            raise InvalidAPIUsage(
-                'Предложенный вариант короткой ссылки уже существует.',
-                HTTPStatus.BAD_REQUEST
-            )
+    def create(original: str, short: str = None) -> "URLMap":
+        """Создаёт и сохраняет URLMap. Проверяет имена."""
+        if short:
+            if short.lower() == FILES_ROUTE.strip('/'):
+                raise InvalidAPIUsage(
+                    'Предложенный вариант короткой ссылки уже существует.',
+                    HTTPStatus.BAD_REQUEST
+                )
+            if URLMap.get_by_short(short):
+                raise InvalidAPIUsage(
+                    'Предложенный вариант короткой ссылки уже существует.',
+                    HTTPStatus.BAD_REQUEST
+                )
+        else:
+            short = URLMap.generate_unique_short_id()
 
         new_link = URLMap(original=original, short=short)
         db.session.add(new_link)

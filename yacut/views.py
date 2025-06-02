@@ -20,17 +20,12 @@ def index_view():
         return render_template('index.html', form=form, short_url=None)
 
     original_link = form.original_link.data
-    custom_id = form.custom_id.data or URLMap.generate_unique_short_id()
-
-    if (URLMap.get_by_short(custom_id) or
-            custom_id.lower() == FILES_ROUTE.strip('/')):
-        flash('Предложенный вариант короткой ссылки уже существует.', 'danger')
-        return render_template('index.html', form=form, short_url=None)
+    custom_id = form.custom_id.data or None
 
     try:
         new_entry = URLMap.create(original=original_link, short=custom_id)
     except InvalidAPIUsage as error:
-        flash(str(error), 'danger')
+        flash(error.message, 'danger')
         return render_template('index.html', form=form, short_url=None)
 
     short_url = new_entry.to_dict()['short_link']
