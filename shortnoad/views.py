@@ -4,11 +4,11 @@ import urllib
 import aiohttp
 from flask import redirect, render_template, request, flash
 
-from yacut import app
-from yacut.constants import FILES_ROUTE
-from yacut.forms import ShortenForm
-from yacut.models import URLMap
-from yacut.error_handlers import InvalidAPIUsage
+from shortnoad import app
+from shortnoad.constants import FILES_ROUTE
+from shortnoad.forms import ShortenForm
+from shortnoad.models import URLMap
+from shortnoad.error_handlers import InvalidAPIUsage
 
 
 @app.route('/', methods=['GET', 'POST'])

@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from flask import render_template, jsonify
 
-from yacut import app, db
+from shortnoad import app, db
 
 
 class InvalidAPIUsage(Exception):

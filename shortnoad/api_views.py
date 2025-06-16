@@ -3,10 +3,10 @@ from http import HTTPStatus
 
 from flask import jsonify, request
 
-from yacut import app
-from yacut.models import URLMap
-from yacut.error_handlers import InvalidAPIUsage
-from yacut.constants import (
+from shortnoad import app
+from shortnoad.models import URLMap
+from shortnoad.error_handlers import InvalidAPIUsage
+from shortnoad.constants import (
     CUSTOM_ID_PATTERN,
     RESERVED_NAMES,
     MAX_CUSTOM_ID_LENGTH,

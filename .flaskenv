@@ -1,2 +1,2 @@
-FLASK_APP=yacut
+FLASK_APP=shortnoad
 FLASK_ENV=development

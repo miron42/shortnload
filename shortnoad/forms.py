@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired, Length, Optional, Regexp, URL
 
-from yacut.constants import (
+from shortnoad.constants import (
     CUSTOM_ID_PATTERN,
     MAX_CUSTOM_ID_LENGTH,
     MIN_CUSTOM_ID_LENGTH

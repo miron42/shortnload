@@ -4,15 +4,15 @@ from http import HTTPStatus
 
 from flask import url_for
 
-from yacut import db
-from yacut.constants import (
+from shortnoad import db
+from shortnoad.constants import (
     CHARS,
     DEFAULT_SHORT_ID_LENGTH,
     FILES_ROUTE,
     MAX_CUSTOM_ID_LENGTH,
     MAX_URL_LENGTH
 )
-from yacut.error_handlers import InvalidAPIUsage
+from shortnoad.error_handlers import InvalidAPIUsage
 
 
 class URLMap(db.Model):
